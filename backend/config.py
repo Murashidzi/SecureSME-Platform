@@ -28,10 +28,11 @@ class Config:
 
 class DevelopmentConfig(Config):
 	DEBUG = True
-	# Use a simple SQLite database for easy local development
+	# Connect to the dockerized PostgreSQL database
 	SQLALCHEMY_DATABASE_URI = os.environ.get("DEV_DATABASE_URL") or \
-	'sqlite:///' + os.path.join(basedir, 'dev.db')
-
+	'postgresql://murashidzi:vamurashidzi@localhost:5432/securesme_dev'
+	SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-for-testing'
+	JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'dev-jwt-secret-key-for-testing'
 
 class TestingConfig(Config):
 	TESTING = True
