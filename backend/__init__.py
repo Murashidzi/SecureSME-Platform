@@ -2,7 +2,7 @@ from flask import Flask
 from .config import config_by_name
 from .extensions import db, migrate
 from .models import user
-
+from .auth import auth_bp
 
 def create_app(config_name='dev'):
 	"""
@@ -16,6 +16,8 @@ def create_app(config_name='dev'):
 	db.init_app(app) # Initialize db with the app
 	migrate.init_app(app, db) # Initialize migrate with the app and db
 
+	# Register blueprints
+	app.register_blueprint(auth_bp)
 
 	# -< We will Register Blueprints here later >-
 	
