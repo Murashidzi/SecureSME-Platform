@@ -1,6 +1,6 @@
 from flask import Flask
 from .config import config_by_name
-from .extensions import db, migrate
+from .extensions import db, migrate, jwt
 from .models import user
 from .auth import auth_bp
 
@@ -15,9 +15,11 @@ def create_app(config_name='dev'):
 	
 	db.init_app(app) # Initialize db with the app
 	migrate.init_app(app, db) # Initialize migrate with the app and db
+	jwt.init_app(app)
 
 	# Register blueprints
 	app.register_blueprint(auth_bp)
+	print(f"Blueprint '{auth_bp.name}' registered with URL prefix '{auth_bp.url_prefix}'")
 
 	# -< We will Register Blueprints here later >-
 	
