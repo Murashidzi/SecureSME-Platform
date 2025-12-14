@@ -14,7 +14,7 @@ def create_app(config_name='dev'):
 	app.config.from_object(config_by_name[config_name])
 	
 	db.init_app(app) # Initialize db with the app
-	migrate.init_app(app, db) # Initialize migrate with the app and db
+	migrate.init_app(app, db, directory='backend/migrations') # Initialize migrate with the app and db
 	jwt.init_app(app)
 
 	# Register blueprints
