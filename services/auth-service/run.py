@@ -1,8 +1,7 @@
 import os
 from flask.cli import FlaskGroup
-from backend import create_app
-from backend.extensions import db # Import db for shell context
-from backend.models.user import User # Import User model for shell context
+from app import create_app, db
+from app.models.user import User
 
 # Get the environment from the FLASK_ENV environment variable, default to 'dev'
 config_name = os.getenv('FLASK_ENV', 'dev')

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: securesme_db
+    environment:
+      - POSTGRES_USER=murashidzi
+      - POSTGRES_PASSWORD=vamurashidzi
+      - POSTGRES_DB=securesme_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  auth-service:
+    build: ./services/auth-service
+    container_name: auth_service
+    command: flask run --host=0.0.0.0
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=dev
+      - DEV_DATABASE_URL=postgresql://murashidzi:vamurashidzi@db:5432/securesme_dev
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
