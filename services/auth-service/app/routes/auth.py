@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from ..extensions import db
 from ..models.user import User
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 import sys
 
 auth_bp = Blueprint('auth', __name__)
@@ -45,8 +45,27 @@ def login_user():
     user = User.query.filter_by(email=email).first()
 
     if user and user.check_password(password):
-        access_token = create_access_token(identity=user.id)
-        refresh_token = create_refresh_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=str(user.id))
         return jsonify({'access_token': access_token, 'refresh_token': refresh_token}), 200
 
     return jsonify({'message': 'Invalid credentials'}), 401
+
+
+# Dashboad Route
+
+@auth_bp.route('/dashboard', methods=['GET'])
+@jwt_required()
+def dashboard():
+	# @jwt_required() has already verified the token.
+	# Now we get the User ID hidden inside that token:
+	current_user_id = get_jwt_identity()
+
+	# Fetch the user details from the database
+	user = User.query.get(int(current_user_id))
+
+	return jsonify({
+		'message': f"Welcome to the SecureSME Dashboard, {user.username}!",
+		'user_id': user.id,
+		'status': 'You have full access'
+	}), 200
