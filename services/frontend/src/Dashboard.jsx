@@ -37,7 +37,7 @@ function Dashboard() {
       <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
         <h3>Status: {message}</h3>
       </div>
-      <button 
+      <button
         onClick={() => {
           localStorage.removeItem('token');
           navigate('/');
