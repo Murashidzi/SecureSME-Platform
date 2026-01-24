@@ -13,6 +13,9 @@ def create_app(config_name):
 
 	#Registering blueprints
 	from .routes.auth import auth_bp
+	from .routes.file_upload import file_bp
+
 	app.register_blueprint(auth_bp, url_prefix='/auth')
+	app.register_blueprint(file_bp, url_prefix='/files')
 
 	return app
