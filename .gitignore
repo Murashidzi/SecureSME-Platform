@@ -1,11 +1,19 @@
+# Python
 __pycache__/
+*.pyc
 venv/
 .env
+.pytest_cache/
+
+# Node/Frontend
 node_modules/
-build/
 dist/
 .DS_Store
-.venv
-__pycache__
-.env
+
+# Docker
+docker-compose.override.yml
+
+# Uploads
+services/auth-service/app/uploads/*
+!service/auth-service/app/uploads/.gitkeep
 uploads/

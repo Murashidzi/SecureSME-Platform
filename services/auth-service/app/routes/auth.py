@@ -1,71 +1,57 @@
 from flask import Blueprint, request, jsonify
-from ..extensions import db
-from ..models.user import User
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
-import sys
+from app.models.user import User
+from flask_jwt_extended import create_access_token, create_refresh_token
+import traceback
 
 auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/register', methods=['POST'])
-def register_user():
-    data = request.get_json()
-    username = data.get('username')
-    email = data.get('email')
-    password = data.get('password')
-
-    if not username or not email or not password:
-        return jsonify({'message': 'Missing fields'}), 400
-
-    if User.query.filter_by(username=username).first():
-        return jsonify({'message': 'Username already exists'}), 400
-
-    if User.query.filter_by(email=email).first():
-        return jsonify({'message': 'Email already exists'}), 400
-
-    try:
-        new_user = User(username=username, email=email)
-        new_user.set_password(password)
-        db.session.add(new_user)
-        db.session.commit()
-        return jsonify({'message': 'User registered successfully!'}), 201
-    except Exception as e:
-        print(f"REGISTRATION ERROR: {e}", file=sys.stderr, flush=True)
-        db.session.rollback()
-        return jsonify({'message': 'A server error occurred during registration.'}), 500
-
 @auth_bp.route('/login', methods=['POST'])
-def login_user():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
+def login():
+    try:
+        data = request.get_json()
 
-    if not email or not password:
-        return jsonify({'message': 'Missing fields'}), 400
+        # Validate Input
+        if not data or not data.get('email') or not data.get('password'):
+            return jsonify({'message': 'Missing email or password'}), 400
 
-    user = User.query.filter_by(email=email).first()
+        # Find User
+        user = User.query.filter_by(email=data['email']).first()
 
-    if user and user.check_password(password):
-        access_token = create_access_token(identity=str(user.id))
-        refresh_token = create_refresh_token(identity=str(user.id))
-        return jsonify({'access_token': access_token, 'refresh_token': refresh_token}), 200
+        # Check Password
+        if user and user.check_password(data['password']):
+            access_token = create_access_token(identity=str(user.id))
 
-    return jsonify({'message': 'Invalid credentials'}), 401
+            # --- THE KITCHEN SINK RESPONSE ---
+            # We send data in every format so the Frontend can't miss it.
+            return jsonify({
+                'message': 'Login successful',
 
+                # 1. Flat Tokens
+                'access_token': access_token,
+                'token': access_token,
 
-# Dashboad Route
+                # 2. Flat User Data
+                'username': user.username,
+                'user_id': user.username,
+                'email': user.email,
 
-@auth_bp.route('/dashboard', methods=['GET'])
-@jwt_required()
-def dashboard():
-	# @jwt_required() has already verified the token.
-	# Now we get the User ID hidden inside that token:
-	current_user_id = get_jwt_identity()
+                # 3. Nested User Object (Common in React)
+                'user': {
+                    'username': user.username,
+                    'name': user.username,
+                    'id': user.id,
+                    'email': user.email,
+                    'role': 'admin'
+                }
+            }), 200
 
-	# Fetch the user details from the database
-	user = User.query.get(int(current_user_id))
+        return jsonify({'message': 'Invalid credentials'}), 401
 
-	return jsonify({
-		'message': f"Welcome to the SecureSME Dashboard, {user.username}!",
-		'user_id': user.id,
-		'status': 'You have full access'
-	}), 200
+    except Exception as e:
+        print(f"!!! LOGIN CRASH !!!: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'message': 'Backend Crash', 'error': str(e)}), 500
+
+@auth_bp.route('/me', methods=['GET'])
+def me():
+    return jsonify({'message': 'User endpoint working'}), 200
