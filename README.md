@@ -12,11 +12,17 @@
 \`\`\`mermaid
 
 graph TD
+
     Client[React Frontend] -->|JWT Auth| API[Flask API Gateway]
+
     API -->|Store Evidence| Vol[Secure Volume Storage]
+
     API -->|Log Analysis| Engine[Threat Detection Engine]
+
     Engine -->|Parse & Detect| Rules[Regex Threat Signatures]
+
     Engine -->|Save Report| DB[(PostgreSQL Database)]
+
     API -->|Fetch History| DB
 
 \`\`\`
