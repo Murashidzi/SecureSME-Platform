@@ -19,14 +19,12 @@ graph TD
     API -->|Fetch History| DB
 \`\`\`
 
-
-
 ## 🚀 Key Features
 
-* **Automated Threat Detection:** Parses unstructured server logs (\`syslog\`, \`auth.log\`) to identify high-severity incidents like SSH brute force and Root access attempts.
+* ** Automated Threat Detection:** Parses unstructured server logs (`syslog`, `auth.log`) to identify high-severity incidents like SSH brute force and Root access attempts.
 * **🛡 DevSecOps Pipeline:** Integrated **Bandit** (SAST) and **Safety** (Dependency Check) into GitHub Actions to block insecure code before deployment.
 * **🔒 Secure Chain of Custody:** Implements Role-Based Access Control (RBAC) and JWT authentication to ensure evidence integrity.
-* **🐳 Containerized Infrastructure:** Fully Dockerized microservices architecture with \`docker-compose\` for consistent deployment.
+* **🐳 Containerized Infrastructure:** Fully Dockerized microservices architecture with `docker-compose` for consistent deployment.
 
 ## 🛠 Tech Stack
 
@@ -39,7 +37,7 @@ graph TD
 
 1.  **Clone the repository**
     \`\`\`bash
-    git clone [https://github.com/Murashidzi/SecureSME-Platform.git](https://github.com/Murashidzi/SecureSME-Platform.git)
+    git clone https://github.com/Murashidzi/SecureSME-Platform.git
     cd SecureSME-Platform
     \`\`\`
 
@@ -59,5 +57,5 @@ graph TD
 3.  The engine immediately scans for patterns defined in \`app/utils/log_parser.py\`.
 4.  Results are visualized in the "Threat Intelligence Report" table.
 
-
+---
 *Built by Murashidzi as a demonstration of DevSecOps and Software Engineering principles.*
