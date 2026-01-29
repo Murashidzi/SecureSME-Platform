@@ -21,10 +21,10 @@ graph TD
 
 ##  Key Features
 
-* ** Automated Threat Detection:** Parses unstructured server logs (`syslog`, `auth.log`) to identify high-severity incidents like SSH brute force and Root access attempts.
-* ** DevSecOps Pipeline:** Integrated **Bandit** (SAST) and **Safety** (Dependency Check) into GitHub Actions to block insecure code before deployment.
-* ** Secure Chain of Custody:** Implements Role-Based Access Control (RBAC) and JWT authentication to ensure evidence integrity.
-* ** Containerized Infrastructure:** Fully Dockerized microservices architecture with `docker-compose` for consistent deployment.
+* **Automated Threat Detection:** Parses unstructured server logs (`syslog`, `auth.log`) to identify high-severity incidents like SSH brute force and Root access attempts.
+* **DevSecOps Pipeline:** Integrated **Bandit** (SAST) and **Safety** (Dependency Check) into GitHub Actions to block insecure code before deployment.
+* **Secure Chain of Custody:** Implements Role-Based Access Control (RBAC) and JWT authentication to ensure evidence integrity.
+* **Containerized Infrastructure:** Fully Dockerized microservices architecture with `docker-compose` for consistent deployment.
 
 ## Tech Stack
 
