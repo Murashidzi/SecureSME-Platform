@@ -19,7 +19,7 @@ graph TD
     API -->|Fetch History| DB
 ```
 
-## Key Features
+##  Key Features
 
 * **Automated Threat Detection:** Parses unstructured server logs (`syslog`, `auth.log`) to identify high-severity incidents like SSH brute force and Root access attempts.
 * **DevSecOps Pipeline:** Integrated **Bandit** (SAST) and **Safety** (Dependency Check) into GitHub Actions to block insecure code before deployment.
@@ -33,7 +33,7 @@ graph TD
 * **Database:** PostgreSQL (with automated Alembic migrations)
 * **DevOps:** Docker, GitHub Actions, Pre-commit hooks
 
-## Installation & Setup
+##  Installation & Setup
 
 1.  **Clone the repository**
     ```bash
@@ -50,12 +50,12 @@ graph TD
     * Frontend: `http://localhost:5173`
     * API: `http://localhost:5000`
 
-## 🧪 Testing the Threat Engine
+##  Testing the Threat Engine
 
 1.  Login via the dashboard.
 2.  Upload a standard Linux log file (e.g., `auth.log`).
 3.  The engine immediately scans for patterns defined in `app/utils/log_parser.py`.
 4.  Results are visualized in the "Threat Intelligence Report" table.
 
------------------------------------------------------------------------------------------
+---
 *Built by Murashidzi as a demonstration of DevSecOps and Software Engineering principles.*
