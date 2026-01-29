@@ -57,5 +57,5 @@ graph TD
 3.  The engine immediately scans for patterns defined in `app/utils/log_parser.py`.
 4.  Results are visualized in the "Threat Intelligence Report" table.
 
----
+-----------------------------------------------------------------------------------------
 *Built by Murashidzi as a demonstration of DevSecOps and Software Engineering principles.*
