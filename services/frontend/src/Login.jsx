@@ -6,51 +6,55 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
     try {
       const response = await axios.post('http://localhost:5000/auth/login', {
         email,
         password
       });
 
-      // --- SAVE DATA CORRECTLY ---
       localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('username', response.data.username || response.data.user_id || 'SecureUser');
+      localStorage.setItem('username', response.data.username);
+      // SAVE THE ROLE
+      localStorage.setItem('role', response.data.role || 'user');
 
       navigate('/dashboard');
-
     } catch (err) {
-      console.error("Login Error:", err);
-      const msg = err.response?.data?.message || 'Connection failed. Is the backend running?';
-      setError(msg);
-    } finally {
-      setLoading(false);
+      setError('Invalid credentials');
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">SecureSME</h2>
-        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm text-center">{error}</div>}
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="p-8 bg-white rounded shadow-md w-96">
+        <h2 className="text-2xl font-bold mb-4 text-center">SecureSME Login</h2>
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         <form onSubmit={handleLogin}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2 border rounded" required />
+            <label className="block text-gray-700">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border rounded"
+              required
+            />
           </div>
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-3 py-2 border rounded" required />
+            <label className="block text-gray-700">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border rounded"
+              required
+            />
           </div>
-          <button type="submit" disabled={loading} className={`w-full text-white font-bold py-2 px-4 rounded ${loading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}>
-            {loading ? 'Signing In...' : 'Sign In'}
+          <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+            Login
           </button>
         </form>
       </div>

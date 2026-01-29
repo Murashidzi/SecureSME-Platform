@@ -1,57 +1,36 @@
 from flask import Blueprint, request, jsonify
+from app import db
 from app.models.user import User
-from flask_jwt_extended import create_access_token, create_refresh_token
-import traceback
+from flask_jwt_extended import create_access_token
 
 auth_bp = Blueprint('auth', __name__)
 
+@auth_bp.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({'message': 'User already exists'}), 400
+
+    user = User(username=data['username'], email=data['email'])
+    user.set_password(data['password'])
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({'message': 'User created successfully'}), 201
+
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    try:
-        data = request.get_json()
+    data = request.get_json()
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({'message': 'Missing email or password'}), 400
 
-        # Validate Input
-        if not data or not data.get('email') or not data.get('password'):
-            return jsonify({'message': 'Missing email or password'}), 400
+    user = User.query.filter_by(email=data['email']).first()
 
-        # Find User
-        user = User.query.filter_by(email=data['email']).first()
+    if user and user.check_password(data['password']):
+        access_token = create_access_token(identity=user.email)
+        return jsonify({
+            'access_token': access_token,
+            'username': user.username,
+            'role': user.role  # <-- SEND ROLE TO FRONTEND
+        }), 200
 
-        # Check Password
-        if user and user.check_password(data['password']):
-            access_token = create_access_token(identity=str(user.id))
-
-            # --- THE KITCHEN SINK RESPONSE ---
-            # We send data in every format so the Frontend can't miss it.
-            return jsonify({
-                'message': 'Login successful',
-
-                # 1. Flat Tokens
-                'access_token': access_token,
-                'token': access_token,
-
-                # 2. Flat User Data
-                'username': user.username,
-                'user_id': user.username,
-                'email': user.email,
-
-                # 3. Nested User Object (Common in React)
-                'user': {
-                    'username': user.username,
-                    'name': user.username,
-                    'id': user.id,
-                    'email': user.email,
-                    'role': 'admin'
-                }
-            }), 200
-
-        return jsonify({'message': 'Invalid credentials'}), 401
-
-    except Exception as e:
-        print(f"!!! LOGIN CRASH !!!: {str(e)}")
-        traceback.print_exc()
-        return jsonify({'message': 'Backend Crash', 'error': str(e)}), 500
-
-@auth_bp.route('/me', methods=['GET'])
-def me():
-    return jsonify({'message': 'User endpoint working'}), 200
+    return jsonify({'message': 'Invalid credentials'}), 401
