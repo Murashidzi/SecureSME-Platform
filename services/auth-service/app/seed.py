@@ -14,7 +14,7 @@ def seed_users():
 
         # 2. Check for Admin
         if not User.query.filter_by(email = 'admin@example.com').first():
-            print("Seeding Admin User..."
+            print("Seeding Admin User...")
             admin = User(
                 username='SuperAdmin',
                 email='admin@example.com',
@@ -27,7 +27,7 @@ def seed_users():
 
         # 3. Check for Regular User
         if not User.query.filter_by(email= "final@example.com").first():
-            print("Seeding Regular User...)
+            print("Seeding Regular User...")
             user = User(
                 username='RegularUser',
                 email='final@example.com',
@@ -41,5 +41,5 @@ def seed_users():
         # 4. Save changes
         db.session.commit()
         print("Database Seeding Complete.")
-if __name__ == '__main__'
-    seed_user()
+if __name__ == '__main__':
+    seed_users()
