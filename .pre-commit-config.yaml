@@ -1,4 +1,5 @@
 repos:
+  # Standard hooks (Whitespace, Keys, AWS credentials
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -7,18 +8,13 @@ repos:
      - id: check-yaml
      - id: check-added-large-files
      - id: detect-private-key # Blocks SSH keys
+     - id: detect-aws-credentials
+       args: [--allow-missing-credentials]
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.7
     hooks:
       - id: bandit
-        args: ["-r", "services/auth-service"]
-        exclude: ^.venv/
+        args: ["-ll"]
+        exclude: ^tests/|.*/tests/|^.venv/
         description: "Python SAST: Scans for common security issues"
-
-  # Cloud Security Specific: Prevents leaking AWS keys
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-     - id: detect-aws-credentials
-       args: [--allow-missing-credentials]

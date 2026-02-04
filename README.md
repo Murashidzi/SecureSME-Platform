@@ -18,13 +18,14 @@ graph TD
     Engine -->|Save Report| DB[(PostgreSQL Database)]
     API -->|Fetch History| DB
 ```
+## Key Features
 
-##  Key Features
-
-* **Automated Threat Detection:** Parses unstructured server logs (`syslog`, `auth.log`) to identify high-severity incidents like SSH brute force and Root access attempts.
+* **Automated Threat Intelligence:** Parses unstructured server logs (`syslog`, `auth.log`) to identify high-severity incidents like SSH brute force and Root access attempts.
+* **Visual Analytics Dashboard:** Transforms raw audit data into interactive **Threat Severity Distribution charts**, allowing admins to assess risk at a glance.
+* **Granular RBAC:** Enforces **Role-Based Access Control**, restricting sensitive analytics to Administrators while allowing standard users to maintain chain-of-custody uploads.
 * **DevSecOps Pipeline:** Integrated **Bandit** (SAST) and **Safety** (Dependency Check) into GitHub Actions to block insecure code before deployment.
-* **Secure Chain of Custody:** Implements Role-Based Access Control (RBAC) and JWT authentication to ensure evidence integrity.
 * **Containerized Infrastructure:** Fully Dockerized microservices architecture with `docker-compose` for consistent deployment.
+
 
 ## Tech Stack
 
