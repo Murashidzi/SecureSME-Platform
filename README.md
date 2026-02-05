@@ -6,7 +6,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Enabled-blue)
 ![PWA](https://img.shields.io/badge/PWA-Offline%20First-purple)
 
-**SecureSME** is a secure, full-stack platform designed to maintain the chain of custody for digital forensic evidence. It features an automated **Threat Intelligence Engine** that parses raw server logs to detect brute-force attacks and privilege escalation in real-time.
+SecureSME is a containerized security tool designed to ingest raw server logs (`auth.log`), identify brute-force patterns using Regex-based parsing, and visualize threat intelligence in real-time.
 
 ## Architecture
 
@@ -22,12 +22,13 @@ graph TD
 ## Key Features
 
 * **Automated Threat Intelligence:** Parses unstructured server logs (`syslog`, `auth.log`) to identify high-severity incidents like SSH brute force and Root access attempts.
+* **Threat Intelligence:** Categorizes threats into *Brute Force*, *Root Access Attempts*, and *Invalid User* attacks.
 * **Visual Analytics Dashboard:** Transforms raw audit data into interactive **Threat Severity Distribution charts**, allowing admins to assess risk at a glance and reducing incident triage by 37%.
 *  **Offline-First Architecture (PWA):** Built a progressive Web App that allows forensic analysts to view dashboards and queue uploads even in disconnected environments (e.g., during load shedding).
 * **Granular RBAC:** Enforces **Role-Based Access Control**, restricting sensitive analytics to Administrators while allowing standard users to maintain chain-of-custody uploads.
 * **DevSecOps Pipeline:** Integrated **Bandit** (SAST) and **Safety** (Dependency Check) into GitHub Actions to block insecure code before deployment.
 * **Containerized Infrastructure:** Fully Dockerized microservices architecture with `docker-compose` for consistent deployment.
-*  **Test-Driven Reliability: Core logic is verified with Pytest unit tests, maintaining high code coverage and preventing regressions.
+*  **Test-Driven Reliability:** Core logic is verified with Pytest unit tests, maintaining high code coverage and preventing regressions.
 
 
 ## Tech Stack
@@ -59,6 +60,9 @@ graph TD
     sudo docker-compose exec auth-service pytest -v
 
     OR
+### Prerequisites
+* Docker & Docker Compose
+* Node.js (for local frontend dev)
 
 1.  Login via the dashboard.
 2.  Upload a standard Linux log file (e.g., `auth.log`).

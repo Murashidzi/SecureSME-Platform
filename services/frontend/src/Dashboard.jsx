@@ -1,137 +1,186 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Upload, Shield, AlertTriangle, FileText, Activity, CheckCircle, Lock } from 'lucide-react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const Dashboard = () => {
-  const [file, setFile] = useState(null);
-  const [message, setMessage] = useState('');
-  const [username, setUsername] = useState('User');
-  const [role, setRole] = useState('user'); // New State
-  const [report, setReport] = useState(null);
-  const [chartData, setChartData] = useState([]);
-  const navigate = useNavigate();
+const Dashboard = ({ token, role, onLogout }) => {
+  const [stats, setStats] = useState([]);
+  const [pieData, setPieData] = useState([]);
+  const [summary, setSummary] = useState({ total_incidents: 0, top_attacker: 'N/A' });
+  const [loading, setLoading] = useState(true);
+  const [uploadStatus, setUploadStatus] = useState('');
+
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+  // Fetch Data on Load
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const data = response.data;
+      if (data.chart_data) {
+          setStats(data.chart_data);
+          setPieData(data.pie_data);
+          setSummary(data.summary);
+      }
+    } catch (err) {
+      console.error("Failed to fetch stats", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const savedName = localStorage.getItem('username');
-    const savedRole = localStorage.getItem('role'); // Get Role
+    fetchStats();
+  }, []);
 
-    if (!token) {
-      navigate('/');
-      return;
-    }
-    if (savedName) setUsername(savedName);
-    if (savedRole) setRole(savedRole);
-  }, [navigate]);
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/');
-  };
-
-  const processChartData = (analysis) => {
-    const counts = { HIGH: 0, MEDIUM: 0, LOW: 0 };
-    analysis.forEach(item => {
-      if (counts[item.severity] !== undefined) counts[item.severity]++;
-    });
-
-    const data = [
-      { name: 'High', value: counts.HIGH, color: '#EF4444' },
-      { name: 'Medium', value: counts.MEDIUM, color: '#F59E0B' },
-      { name: 'Low', value: counts.LOW, color: '#3B82F6' }
-    ];
-    setChartData(data.filter(item => item.value > 0));
-  };
-
-  const handleUpload = async () => {
-    if (!file) {
-      setMessage('Please select a file first.');
-      return;
-    }
+    setUploadStatus('Uploading & Analyzing...');
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/files/upload', formData, {
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      const response = await axios.post(`${apiUrl}/upload`, formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
       });
-      setMessage(response.data.message);
-      setReport(response.data.analysis);
-      processChartData(response.data.analysis);
-    } catch (error) {
-      setMessage(`Error: ${error.message}`);
+
+      setUploadStatus('✅ Analysis Complete!');
+      // Update charts immediately with the new data
+      if (response.data.data) {
+          setStats(response.data.data.chart_data);
+          setPieData(response.data.data.pie_data);
+          setSummary(response.data.data.summary);
+      }
+
+    } catch (err) {
+      console.error("Upload failed", err);
+      const reason = err.response?.data?.msg || err.message || 'Unknown Error';
+      setUploadStatus(`❌ Failed: ${reason}`);
     }
   };
 
-  const getSeverityColor = (severity) => {
-    if (severity === 'HIGH') return 'bg-red-100 text-red-800 border-red-200';
-    if (severity === 'MEDIUM') return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    return 'bg-blue-100 text-blue-800 border-blue-200';
-  };
-
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-6">
-
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8 border-b pb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">SecureSME Dashboard</h1>
-            <span className={`text-xs font-bold uppercase px-2 py-1 rounded ml-1 ${role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
-              {role} View
-            </span>
-          </div>
-          <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition">Logout</button>
-        </div>
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-
-          {/* Upload Section (Visible to ALL) */}
-          <div className="md:col-span-1 space-y-6">
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-              <h2 className="text-xl font-semibold text-blue-800">Hello, {username}</h2>
-              <p className="text-sm text-blue-600 mt-1">Status: Online</p>
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+      <nav className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            <div className="flex items-center gap-2">
+              <Shield className="h-8 w-8 text-blue-400" />
+              <span className="text-xl font-bold tracking-tight">SecureSME <span className="text-blue-400">Intel</span></span>
             </div>
-            <div className="p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 text-center">
-              <input type="file" onChange={(e) => setFile(e.target.files[0])} className="block w-full text-sm text-gray-500 mb-4"/>
-              <button onClick={handleUpload} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition">Analyze Log</button>
+            <div className="flex items-center gap-6">
+              <div className="hidden md:block text-right">
+                <p className="text-xs text-slate-400 uppercase tracking-wider">Operator</p>
+                <div className="flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${role === 'admin' ? 'bg-red-500' : 'bg-green-500'}`}></span>
+                  <span className="font-semibold capitalize text-sm">{role}</span>
+                </div>
+              </div>
+              <button onClick={onLogout} className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-md text-sm font-medium transition border border-slate-700">
+                Sign Out
+              </button>
             </div>
-            {message && <div className="p-3 bg-green-100 text-green-700 rounded text-sm">{message}</div>}
-          </div>
-
-          {/* Admin Analytics (Visible ONLY to Admin) */}
-          <div className="md:col-span-2 flex flex-col justify-center items-center bg-gray-50 rounded-lg border border-gray-200 p-4 relative">
-
-            {role !== 'admin' && (
-              <div className="absolute inset-0 bg-white bg-opacity-90 flex flex-col items-center justify-center z-10 rounded-lg">
-                <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                <p className="text-gray-500 font-semibold">Analytics Locked</p>
-                <p className="text-xs text-gray-400">Admin privileges required</p>
-              </div>
-            )}
-
-            <h3 className="text-lg font-semibold mb-2 text-gray-700">Global Threat Intelligence</h3>
-            {chartData.length > 0 ? (
-              <div className="w-full h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                      {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                    </Pie>
-                    <Tooltip />
-                    <Legend verticalAlign="bottom"/>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="text-gray-400 italic h-64 flex items-center">No data available</div>
-            )}
           </div>
         </div>
-      </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* --- KPI Cards --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div className="flex justify-between items-start">
+              <div><p className="text-sm font-medium text-slate-500">Total Incidents</p><h3 className="text-3xl font-bold text-slate-800 mt-2">{summary.total_incidents}</h3></div>
+              <div className="p-2 bg-red-50 rounded-lg"><AlertTriangle className="h-6 w-6 text-red-500" /></div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+             <div className="flex justify-between items-start">
+              <div><p className="text-sm font-medium text-slate-500">Top Attacker IP</p><h3 className="text-xl font-bold text-slate-800 mt-2">{summary.top_attacker}</h3></div>
+              <div className="p-2 bg-blue-50 rounded-lg"><FileText className="h-6 w-6 text-blue-500" /></div>
+            </div>
+          </div>
+           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+             <div className="flex justify-between items-start">
+              <div><p className="text-sm font-medium text-slate-500">System Status</p><h3 className="text-3xl font-bold text-slate-800 mt-2">Active</h3></div>
+              <div className="p-2 bg-green-50 rounded-lg"><CheckCircle className="h-6 w-6 text-green-500" /></div>
+            </div>
+          </div>
+        </div>
+
+        {/* --- Charts --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Line Chart */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+              <h3 className="text-lg font-bold text-slate-800 mb-4">Threat Velocity (Hourly)</h3>
+              <div className="h-72 w-full">
+                {stats.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={stats}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="name" stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" />
+                      <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} itemStyle={{ color: '#fff' }} />
+                      <Line type="monotone" dataKey="threats" stroke="#3b82f6" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 8}} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-gray-400">No data available. Upload a log file.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Pie Chart */}
+             <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+              <h3 className="text-lg font-bold text-slate-800 mb-4">Attack Vectors</h3>
+              <div className="h-64 w-full flex justify-center">
+                 {pieData.length > 0 ? (
+                   <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                          {pieData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                   </ResponsiveContainer>
+                 ) : (
+                    <div className="flex h-full items-center justify-center text-gray-400">No attack data found.</div>
+                 )}
+              </div>
+              <div className="flex justify-center gap-6 mt-4">
+                  {pieData.map((item) => (<div key={item.name} className="flex items-center text-sm text-slate-600"><span className="w-3 h-3 rounded-full mr-2" style={{backgroundColor: item.color}}></span>{item.name}</div>))}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-8">
+             <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="text-lg font-bold text-slate-800 mb-4">Upload Evidence</h3>
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:bg-slate-50 transition-colors relative">
+                   <input type="file" onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                   <div className="flex flex-col items-center">
+                      <div className="p-3 bg-blue-100 rounded-full mb-3"><Upload className="h-6 w-6 text-blue-600" /></div>
+                      <p className="text-sm font-medium text-slate-700">Click to upload auth.log</p>
+                      <p className="text-xs text-slate-500 mt-1">Supports .log, .txt (Max 5MB)</p>
+                   </div>
+                </div>
+                {uploadStatus && (
+                  <div className={`mt-4 p-3 rounded-md text-sm text-center font-medium ${uploadStatus.includes('✅') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {uploadStatus}
+                  </div>
+                )}
+             </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };

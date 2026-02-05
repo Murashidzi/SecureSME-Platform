@@ -8,6 +8,7 @@ class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(255), nullable=False)
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(50), default='pending')
 
     # We store the user_id so we know WHO uploaded it
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -20,5 +21,7 @@ class Report(db.Model):
             'id': self.id,
             'filename': self.filename,
             'upload_date': self.upload_date.isoformat(),
-            'findings': self.findings
+            'findings': self.findings,
+            'status': self.status,
+            'user_id': self.user_id
         }

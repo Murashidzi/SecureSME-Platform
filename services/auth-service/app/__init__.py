@@ -1,39 +1,40 @@
-import os
-from flask import Flask
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
+from app.config import Config
 
-# initialize extensions
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 
-def create_app(config_name):
+def create_app(config_name='dev'):
     app = Flask(__name__)
+    app.config.from_object(Config)
 
-    # Configuration
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///dev.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'dev-jwt-key')
-
-    # Initialize Plugins
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
     CORS(app)
 
-    with app.app_context():
-        # Import models so migration sees them
-        from app.models.user import User
-        from app.models.report import Report
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error_string):
+        print(f"JWT INVALID ERROR: {error_string}")
+        return jsonify({"msg": f"Invalid Token: {error_string}"}), 422
 
-        from app.routes.auth import auth_bp
-        from app.routes.file_upload import file_bp
+    @jwt.unauthorized_loader
+    def missing_token_callback(error_string):
+        print(f"JWT MISSING ERROR: {error_string}")
+        return jsonify({"msg": "Missing Authorization Header"}), 401
 
-        app.register_blueprint(auth_bp, url_prefix='/auth')
-        app.register_blueprint(file_bp, url_prefix='/files')
+    from app.models.user import User
+    from app.models.report import Report
 
-        return app
+    from app.auth import auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+
+    from app.api import api_bp
+    app.register_blueprint(api_bp)
+
+    return app

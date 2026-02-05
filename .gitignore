@@ -17,3 +17,7 @@ docker-compose.override.yml
 services/auth-service/app/uploads/*
 !service/auth-service/app/uploads/.gitkeep
 uploads/
+
+# Logs
+*.log
+heavy_attack.log
