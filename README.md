@@ -19,12 +19,12 @@ SecureSME is a containerized security tool designed to ingest raw server logs (`
 
 ```mermaid
 graph TD
-    Client[React Frontend(PWA)] -->|JWT Auth + Offline Sync| API[Flask API Gateway]
-    API -->|Store Evidence| Vol[Secure Volume Storage]
-    API -->|Log Analysis| Engine[Threat Detection Engine]
-    Engine -->|Parse & Detect| Rules[Regex Threat Signatures]
-    Engine -->|Save Report| DB[(PostgreSQL Database)]
-    API -->|Fetch History| DB
+    Client["React Frontend(PWA)"] -->|"JWT Auth + Offline Sync"| API["Flask API Gateway"]
+    API -->|"Store Evidence"| Vol["Secure Volume Storage"]
+    API -->|"Log Analysis"| Engine["Threat Detection Engine"]
+    Engine -->|"Parse & Detect"| Rules["Regex Threat Signatures"]
+    Engine -->|"Save Report"| DB[("PostgreSQL Database")]
+    API -->|"Fetch History"| DB
 ```
 ## Key Features
 
@@ -75,6 +75,9 @@ graph TD
 2.  Upload a standard Linux log file (e.g., `auth.log`).
 3.  The engine immediately scans for patterns defined in `app/utils/log_parser.py`.
 4.  Results are visualized in the "Threat Intelligence Report" table.
+# Sample Data
+The platform includes a generate_noise.py script to simulate 1,500+ security incidents for stress testing the visualization engine.
+
 
 ---
 *Built by Murashidzi as a demonstration of DevSecOps and Software Engineering principles.*
