@@ -1,0 +1,38 @@
+name: DevSecOps Build & Audit
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout Code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Build the Docker Image (Using the secure Alpine Dockerfile)
+      - name: Build Docker Image
+        run: |
+          docker build -t securesme-auth:latest ./services/auth-service
+
+      # 3. Run Trivy Vulnerability Scanner
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'securesme-auth:latest'
+          format: 'table'
+          # Fail the build if CRITICAL issues are found (Quality Gate)
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      # 4. Success Message
+      - name: Security Gate Passed
+        if: success()
+        run: echo "✅ Image is secure. No Critical/High vulnerabilities found."
