@@ -6,6 +6,13 @@
 ![Docker](https://img.shields.io/badge/Docker-Enabled-blue)
 ![PWA](https://img.shields.io/badge/PWA-Offline%20First-purple)
 
+## Portfolio Evidence
+## 1. Real-Time Threat Intelligence
+*Vizualizing 1,500+ security incidents extracted from raw server logs.*
+![Dashboard View](assets/images/dashboard.png)
+## 2. Security Posture (0 Vulnerablities)
+![Trivy Scan Result](assets/images/trivy_scan.png)
+
 SecureSME is a containerized security tool designed to ingest raw server logs (`auth.log`), identify brute-force patterns using Regex-based parsing, and visualize threat intelligence in real-time.
 
 ## Architecture
