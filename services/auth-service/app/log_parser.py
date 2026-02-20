@@ -1,101 +1,70 @@
 import re
-from collections import Counter, defaultdict
-from datetime import datetime
 
-def parse_auth_log(filepath):
+def parse_log_file(filepath):
     """
-    Robust Log Parser. Skips malformed lines instead of crashing.
+    Parses a Linux auth.log file and extracts attack patterns.
+    Returns a list of dictionaries.
     """
+    data = []
 
-    # Pattern: "Failed password for (invalid user) <user> from <ip>"
-    failed_password_pattern = re.compile(r'Failed password for (invalid user )?(\w+) from (\d+\.\d+\.\d+\.\d+)')
-
-    # Pattern: "Feb  5 07:16:42" (Syslog standard)
-    timestamp_pattern = re.compile(r'^(\w{3}\s+\d+\s\d{2}:\d{2}:\d{2})')
-
-    stats = {
-        "total_threats": 0,
-        "hourly_counts": defaultdict(int),
-        "attack_types": Counter(),
-        "top_ips": Counter()
+    # Regex patterns for common attacks
+    patterns = {
+        'ssh_fail': r"Failed password for (?:invalid user )?(\w+) from (\d+\.\d+\.\d+\.\d+)",
+        'root_attempt': r"Failed password for root from (\d+\.\d+\.\d+\.\d+)",
+        'invalid_user': r"Invalid user (\w+) from (\d+\.\d+\.\d+\.\d+)"
     }
 
     try:
-        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(filepath, 'r') as f:
             for line in f:
-                try:
-                    # 1. Hunt for the Attack
-                    match = failed_password_pattern.search(line)
-                    if match:
-                        stats["total_threats"] += 1
-
-                        user = match.group(2)
-                        ip = match.group(3)
-
-                        # categorize
-                        if user == 'root':
-                            stats["attack_types"]["Root Access"] += 1
-                        elif match.group(1):
-                            stats["attack_types"]["Invalid User"] += 1
-                        else:
-                            stats["attack_types"]["Brute Force"] += 1
-
-                        stats["top_ips"][ip] += 1
-
-                        # 2. Extract Time (Safe Mode)
-                        time_match = timestamp_pattern.search(line)
-                        if time_match:
-                            ts_str = time_match.group(1)
-                            try:
-                                # Try parsing "Feb  5 07:16:42"
-                                # Note: Python requires the month to match the locale (English)
-                                dt = datetime.strptime(ts_str, "%b %d %H:%M:%S")
-                                hour_key = dt.strftime("%H:00")
-                                stats["hourly_counts"][hour_key] += 1
-                            except ValueError:
-                                # If date fails, just count it as "Unknown Time" or skip
-                                pass
-                except Exception:
-                    # If a single line causes an error, skip it and continue!
+                line = line.strip()
+                if not line:
                     continue
 
-        return format_results(stats)
+                # Default timestamp extraction (simple approach for demo)
+                # In production, use regex to extract "Feb 10 09:00:01"
+                timestamp = line[:15]
+
+                # Check for Root Attempts (High Severity)
+                if "root" in line and "Failed" in line:
+                    match = re.search(patterns['root_attempt'], line)
+                    if match:
+                        data.append({
+                            'ip': match.group(1),
+                            'user': 'root',
+                            'attack_type': 'Root Access Attempt',
+                            'timestamp': timestamp,
+                            'raw': line
+                        })
+                        continue
+
+                # Check for Invalid Users
+                if "Invalid user" in line:
+                    match = re.search(patterns['invalid_user'], line)
+                    if match:
+                        data.append({
+                            'ip': match.group(2),
+                            'user': match.group(1),
+                            'attack_type': 'Invalid User',
+                            'timestamp': timestamp,
+                            'raw': line
+                        })
+                        continue
+
+                # Check for Standard Brute Force
+                if "Failed password" in line:
+                    match = re.search(patterns['ssh_fail'], line)
+                    if match:
+                        data.append({
+                            'ip': match.group(2),
+                            'user': match.group(1),
+                            'attack_type': 'Brute Force',
+                            'timestamp': timestamp,
+                            'raw': line
+                        })
 
     except Exception as e:
-        print(f"CRITICAL PARSER ERROR: {e}")
-        # Return an empty valid structure so the frontend doesn't break
-        return {
-            "summary": {"total_incidents": 0, "top_attacker": "Parser Error"},
-            "chart_data": [],
-            "pie_data": []
-        }
+        print(f"Error parsing file: {e}")
+        return []
 
-def format_results(stats):
-    chart_data = []
-    # Sort hours safely
-    sorted_hours = sorted(stats["hourly_counts"].keys())
-    for hour in sorted_hours:
-        chart_data.append({
-            "name": hour,
-            "threats": stats["hourly_counts"][hour]
-        })
-
-    pie_data = [
-        {"name": "Brute Force", "value": stats["attack_types"]["Brute Force"], "color": "#EF4444"},
-        {"name": "Root Access", "value": stats["attack_types"]["Root Access"], "color": "#F59E0B"},
-        {"name": "Invalid User", "value": stats["attack_types"]["Invalid User"], "color": "#6366F1"},
-    ]
-
-    # Handle case where top_ips is empty
-    top_attacker = "N/A"
-    if stats["top_ips"]:
-        top_attacker = stats["top_ips"].most_common(1)[0][0]
-
-    return {
-        "summary": {
-            "total_incidents": stats["total_threats"],
-            "top_attacker": top_attacker
-        },
-        "chart_data": chart_data,
-        "pie_data": pie_data
-    }
+    return data

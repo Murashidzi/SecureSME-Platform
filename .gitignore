@@ -1,23 +1,20 @@
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+env/
 venv/
-.env
-.pytest_cache/
 
-# Node/Frontend
-node_modules/
-dist/
-.DS_Store
-
-# Docker
-docker-compose.override.yml
-
-# Uploads
-services/auth-service/app/uploads/*
-!service/auth-service/app/uploads/.gitkeep
+# Docker and Data
+postgres_data/
 uploads/
-
-# Logs
 *.log
-heavy_attack.log
+
+# Environment variables (Security Risk)
+.env
+node_modules/
+node_modules/
+frontend/node_modules/
+frontend/node_modules/

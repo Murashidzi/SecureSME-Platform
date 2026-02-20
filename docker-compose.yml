@@ -1,34 +1,85 @@
-version: '3.8'
-
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: securesme_db
-    environment:
-      - POSTGRES_USER=murashidzi
-      - POSTGRES_PASSWORD=vamurashidzi
-      - POSTGRES_DB=securesme_dev
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
+  # 1. The API Gateway
   auth-service:
     build: ./services/auth-service
-    container_name: auth_service
-    command: flask run --host=0.0.0.0
+    container_name: securesme_api
+    restart: always
     ports:
       - "5000:5000"
     environment:
-      - FLASK_APP=run.py
-      - FLASK_ENV=dev
-      - DATABASE_URL=postgresql://murashidzi:vamurashidzi@db:5432/securesme_dev
-      - SECRET_KEY=dev-secret-key
-      - JWT_SECRET_KEY=dev-jwt-key
+      - DATABASE_URL=postgresql://user:password@securesme_db:5432/securesme
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
-      - db
+      - securesme_db
+      - redis
+    networks:
+      - securesme-net
     volumes:
-      - ./uploads:/app/uploads
+      - uploads_data:/app/uploads  # <--- SHARED FOLDER
+
+  # 2. The Worker
+  worker:
+    build: ./services/auth-service
+    container_name: securesme_worker
+    command: celery -A app.celery_worker.celery worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://user:password@securesme_db:5432/securesme
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - securesme_db
+      - redis
+    networks:
+      - securesme-net
+    volumes:
+      - uploads_data:/app/uploads  # <--- WORKER CAN NOW SEE FILES
+
+  # 3. Redis
+  redis:
+    image: redis:alpine
+    container_name: securesme_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - securesme-net
+
+  # 4. Database
+  securesme_db:
+    image: postgres:15-alpine
+    container_name: securesme_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: securesme
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - securesme-net
+
+  # 5. eBPF agent
+  ebpf-agent:
+    build: ./services/ebpf-agent
+    container_name: securesme_ebpf
+    privileged: true #Allows Kernel access
+    pid: "host" #Allows seeing Host PIDs
+    volumes:
+      # We mount the HOST kernel headers into the container
+      # This allows the container to compile C code for the specific host kernel
+      - /lib/modules:/lib/modules:ro
+      - /usr/src:/usr/src:ro
+      - /sys/kernel/debug:/sys/kernel/debug
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - securesme-net
+    restart: unless-stopped
+
+
+networks:
+  securesme-net:
+    driver: bridge
 
 volumes:
   postgres_data:
+  uploads_data:  # <--- New Volume Declaration
