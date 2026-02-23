@@ -18,3 +18,21 @@ node_modules/
 node_modules/
 frontend/node_modules/
 frontend/node_modules/
+
+# Python Environments & Cache
+ml_env/
+__pycache__/
+*.pyc
+
+# Node Modules
+node_modules/
+frontend/node_modules/
+services/frontend/node_modules/
+
+# ML Models & Data (We don't commit 50MB files to Git)
+ml_model/*.csv
+
+# Uploads & Temp Files
+uploads/*.log
+*.log
+!evidence.log

