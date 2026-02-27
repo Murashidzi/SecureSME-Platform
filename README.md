@@ -72,13 +72,6 @@ graph TD
 * **DevSecOps Pipeline:** Integrated Bandit (SAST) and Safety dependency scanning into GitHub Actions to block vulnerable code.
 
 
-## Limitations & Architectural Roadmap
-> To scale from a research artifact to a production-grade enterprise deployment, the following architectural upgrades are mapped for future iterations:
-
-* **eBPF CO-RE Migration:** Transitioning the kernel probe from the BCC framework to libbpf and CO-RE (Compile Once – Run Everywhere) to eliminate the heavy LLVM/Clang compiler footprint on worker nodes.
-
-* **Behavioral Process Lineage:** Upgrading the ML feature extrac
-
 ## Current Limitations & Architectural Roadmap
 
 ### 1. Performance Evaluation (In Progress)
