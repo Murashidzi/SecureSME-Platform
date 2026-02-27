@@ -1,4 +1,20 @@
-# SecureSME - Cloud-Native Runtime Security Engine
+# SecureSME
+### Experimental Cloud-Native Runtime Detection Framework (eBPF + Kubernetes + ML)
+SecureSME is an experimental runtime security framework designed to evaluate the feasibility of combining kernel-level eBPF telemetry with unsupervised machine learning for detecting anomalous behavior in Kubernetes environments.
+
+The project explores a core research question:
+> Can high-fidelity syscall telemetry collected at Ring 0 be transformed into practical, low-overhead anomaly detection for cloud-native workloads?
+
+Rather than competing with production tools such as Falco, SecureSME is engineered as a systems research platform that bridges:
+
+- Kernel-level observability (eBPF)
+- Kubernetes runtime security
+- DevSecOps deployment practices
+- Unsupervised anomaly detection (Isolation Forest)
+
+The goal is to evaluate detection efficacy, system overhead, and architectural trade-offs in a realistic containerized environment.
+
+
 
 ![Build Status](https://github.com/Murashidzi/SecureSME-Platform/actions/workflows/security-scan.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
@@ -45,15 +61,54 @@ graph TD
 
 ## Key Features
 
-* **Kernel Observability (eBPF):** A privileged Docker container running an eBPF probe that hooks into the Linux kernel to gain immutable, Ring-0 visibility across all workloads.
+* **Kernel Observability (eBPF):** A privileged Docker container running an eBPF probe that hooks into the Linux kernel to gain immutable, Ring-0 visibility across all Kubernetes namespaces, bypassing container isolation boundaries.
 
-* **AI Anomaly Detection:** Replaces rigid regex rules with an Unsupervised Machine Learning model (Isolation Forest) deployed at the edge to mathematically detect zero-day reverse shells and droppers.
+* **Edge AI Anomaly Detection:** Replaces rigid regex rules with an Unsupervised Machine Learning model (Isolation Forest) deployed at the edge to mathematically detect zero-day reverse shells and droppers without static signatures.
 
 * **Automated Threat Intelligence:** Parses unstructured server logs (syslog, auth.log) to identify high-severity incidents like SSH brute force and Root access attempts.
 
 * **Adversarial Validation:** Architecture successfully red-teamed against simulated container-escape and living-off-the-land (LotL) attack chains.
 
 * **DevSecOps Pipeline:** Integrated Bandit (SAST) and Safety dependency scanning into GitHub Actions to block vulnerable code.
+
+
+## Limitations & Architectural Roadmap
+> To scale from a research artifact to a production-grade enterprise deployment, the following architectural upgrades are mapped for future iterations:
+
+* **eBPF CO-RE Migration:** Transitioning the kernel probe from the BCC framework to libbpf and CO-RE (Compile Once – Run Everywhere) to eliminate the heavy LLVM/Clang compiler footprint on worker nodes.
+
+* **Behavioral Process Lineage:** Upgrading the ML feature extrac
+
+## Current Limitations & Architectural Roadmap
+
+### 1. Performance Evaluation (In Progress)
+- No high-throughput syscall benchmarking yet.
+- No quantified latency delta under load.
+- Future Work:
+  - Measure CPU overhead at varying exec rates.
+  - Profile memory footprint under stress.
+  - Publish baseline vs instrumented comparison tables.
+
+### 2. Behavioral Modeling Depth
+- Current ML features are primarily lexical and event-based.
+- Lacks:
+  - Process lineage modeling
+  - Temporal burst detection
+  - Container-level statistical baselining
+- Future Work:
+  - Introduce parent-child graph modeling.
+  - Implement rolling window anomaly scoring.
+  - Evaluate sequential behavioral models.
+
+### 3. eBPF Production Hardening
+- Currently built using BCC.
+- Migration to libbpf + CO-RE planned to reduce runtime dependencies and improve portability.
+
+### 4. Cluster-Scale Validation
+- Tested in controlled Kubernetes environment.
+- Future Work:
+  - Multi-node stress simulation.
+  - Failure mode and recovery testing.
 
 
 ## Tech Stack
