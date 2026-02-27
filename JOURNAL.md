@@ -89,3 +89,20 @@ Synthesized a dataset of 5,050 execution events (5,000 benign, 50 anomalous LotL
 - **Recall (True Positive Rate):** 80% (Caught 40/50 anomalies).
 - **Analysis:** The model successfully identified highly obfuscated payloads and reverse shells strictly through mathematical distance (path length), without prior signature training.
 - **Limitation Acknowledgment:** The 20% False Negative rate represents "blend-in" attacks (e.g., short, syntax-normal privilege escalations). Future iterations will require sequential behavioral modeling (e.g., tracking parent-child process state transitions) rather than isolated point-in-time lexical analysis.
+
+
+## Milestone: Cloud-Native Kubernetes Orchestration
+**Date:** February 2026
+**Component:** `infra/k8s/ebpf/daemonset.yaml`
+
+### Research Objective
+To elevate the eBPF agent from a local Docker environment to a highly available, scalable Kubernetes deployment suitable for enterprise infrastructure.
+
+### Architectural Execution
+Deployed the AI-powered eBPF agent as a privileged **DaemonSet** within a dedicated `security-ops` namespace.
+- Utilized `hostPID: true` and mounted host OS directories (`/usr/src`, `/lib/modules`, `/sys/kernel/debug`) to allow the isolated security pod to instrument the underlying worker node's Ring 0 kernel.
+- The DaemonSet architecture guarantees that exactly one security sensor runs on every node, automatically scaling protection as the cluster expands.
+
+### Final Adversarial Validation
+Spawned an interactive, unprivileged Alpine pod in the `default` namespace and executed a malicious LotL payload (`wget` & `nc`).
+**Result:** The eBPF DaemonSet successfully intercepted the syscall, proving total cross-namespace visibility and true host-level protection, effectively neutralizing the container boundary as a hiding place for attackers.

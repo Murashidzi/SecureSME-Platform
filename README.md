@@ -40,7 +40,7 @@ graph TD
     end
 
     %% Frontend
-    DB -->|"Fetch Telemetry"| UI["React PWA Dashboard"
+    DB -->|"Fetch Telemetry"| UI["React PWA Dashboard"]
 ```
 
 ## Key Features

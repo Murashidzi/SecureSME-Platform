@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: securesme-ebpf-agent
+  namespace: security-ops
+  labels:
+    app: securesme-ebpf
+spec:
+  selector:
+    matchLabels:
+      app: securesme-ebpf
+  template:
+    metadata:
+      labels:
+        app: securesme-ebpf
+    spec:
+      # CRITICAL: Allows the pod to see processes across the entire host node,
+      # not just inside its own container.
+      hostPID: true
+      containers:
+      - name: ebpf-agent
+        image: securesme-platform_ebpf-agent:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        # The API endpoint will eventually be the K8s internal DNS name
+        - name: API_ENDPOINT
+          value: "http://securesme-api.default.svc.cluster.local:5000/api/ebpf-alert"
+
+        # CRITICAL: The agent requires privileged access to load eBPF bytecode into the Ring 0 Kernel
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - SYS_ADMIN
+              - BPF
+              - PERFMON
+
+        volumeMounts:
+        - name: lib-modules
+          mountPath: /lib/modules
+          readOnly: true
+        - name: usr-src
+          mountPath: /usr/src
+          readOnly: true
+        - name: sys-kernel-debug
+          mountPath: /sys/kernel/debug
+
+      # CRITICAL: Mounting host paths so the BCC compiler can find the exact kernel headers of the EC2/Worker node
+      volumes:
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
+      - name: usr-src
+        hostPath:
+          path: /usr/src
+      - name: sys-kernel-debug
+        hostPath:
+          path: /sys/kernel/debug
