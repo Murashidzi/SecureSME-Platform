@@ -14,8 +14,6 @@ Rather than competing with production tools such as Falco, SecureSME is engineer
 
 The goal is to evaluate detection efficacy, system overhead, and architectural trade-offs in a realistic containerized environment.
 
-
-
 ![Build Status](https://github.com/Murashidzi/SecureSME-Platform/actions/workflows/security-scan.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed%20Microservices-orange)
@@ -39,7 +37,7 @@ SecureSME utilizes a hybrid detection strategy, combining asynchronous log parsi
 ```mermaid
 graph TD
     %% Legacy Log Pipeline
-    subgraph Reactive Sensor (User Space)
+    subgraph UserSpace ["Reactive Sensor (User Space)"]
         User["Forensic Analyst"] -->|"Upload auth.log"| API["Flask API Gateway"]
         API -->|"Queue Task"| Redis["Redis Message Broker"]
         Redis -->|"Pop Task"| Worker["Celery Worker Node"]
@@ -47,7 +45,7 @@ graph TD
     end
 
     %% Modern eBPF Pipeline
-    subgraph Proactive Sensor (Kernel Space)
+    subgraph KernelSpace ["Proactive Sensor (Kernel Space)"]
         Attacker["Attacker (Compromised Pod)"] -->|"Runs malware"| Syscall["sys_execve (Ring 0)"]
         Syscall -->|"Intercept"| BPF["eBPF Probe"]
         BPF -->|"Perf Buffer"| Agent["Python Security Agent"]
@@ -122,13 +120,16 @@ graph TD
     cd SecureSME-Platform
     ```
 
-2.  **Start with Docker:** (Note: The eBPF agent requires host kernel headers and privileged execution)
+2.  **Deployment Option A:** Local Docker Compose (Note: The eBPF agent requires host kernel headers and privileged execution)
     ```bash
     sudo docker-compose up -d --build
+    sudo docker exec securesme_api python init_db.py
     ```
-3. **Initialize Database**
-    ```sudo docker exec securesme_api python init_db.py```
-
+3. **Deployment Option B: Kubernetes (DaemonSet)** Deploy the sensor across a K8s cluster mapping host-level kernel debug directories.
+    ```bash
+    kubectl create namespace security-ops
+    kubectl apply -f infra/k8s/ebpf/daemonset.yaml
+    ```
 
 ##  Adversarial Testing (Red Teaming)
 * **Test A: The Reactive Engine (Log Analysis)**
